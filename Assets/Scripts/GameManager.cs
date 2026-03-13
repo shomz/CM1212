@@ -10,6 +10,7 @@ public class GameManager : Singleton<GameManager>
 {
     [SerializeField] private UIController UI;
     [SerializeField] private ScoreManager ScoreManager;
+    [SerializeField] private AudioManager Audio;
     [SerializeField] private Transform CardContainer;
     [SerializeField] private CardController CardPrefab;
     [SerializeField] private int CardVariationsCount = 4;
@@ -24,7 +25,9 @@ public class GameManager : Singleton<GameManager>
         var gameTypes = new GameType[]
         {
             new(2, 2),
+            new(2, 3),
             new(4, 4),
+            new(4, 6),
             new(5, 6)
         };
 
@@ -69,15 +72,18 @@ public class GameManager : Singleton<GameManager>
         if (currentlySelectedCard == null)
         {
             currentlySelectedCard = card;
+            Audio.PlayFlip();
         }
         else
         {
             if (card.Id != currentlySelectedCard.Id)
             {
+                Audio.PlayMismatch();
                 StartCoroutine(FlipCardsBack(1, new CardController[] { card, currentlySelectedCard }));
             }
             else
             {
+                Audio.PlayMatch();
                 AllowedToSelectCards = true;
                 solved += 2;
             }
@@ -101,6 +107,8 @@ public class GameManager : Singleton<GameManager>
     private IEnumerator ShowCongratulations()
     {
         yield return new WaitForSeconds(2);
+
+        Audio.PlayVictory();
         UI.ShowCanvas(UI.GameOverCanvas);
     }
 
@@ -117,6 +125,12 @@ public class GameManager : Singleton<GameManager>
 
         deck = SpawnCards(gameType.rows * gameType.cols);
         solved = 0;
+
+        float scale = CardContainer.GetComponent<GridLayoutGroup>().cellSize.x / 160;
+        foreach (var card in deck)
+        {
+            card.transform.localScale = Vector3.one * scale;
+        }
 
         UI.ShowCanvas(UI.GameCanvas);
 
@@ -153,6 +167,8 @@ public class GameManager : Singleton<GameManager>
         }
 
         AllowedToSelectCards = true;
+
+        Audio.PlayFlip();
     }
 
     private void ClearCardContainer()
