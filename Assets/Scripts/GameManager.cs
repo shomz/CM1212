@@ -1,6 +1,8 @@
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 public class GameManager : Singleton<GameManager>
@@ -8,7 +10,9 @@ public class GameManager : Singleton<GameManager>
     [SerializeField] private UIController UI;
     [SerializeField] private Transform CardContainer;
     [SerializeField] private CardController CardPrefab;
-    [SerializeField] private int CardTypesCount = 4;
+    [SerializeField] private int CardVariationsCount = 4;
+    private List<CardController> deck;
+    private CardController currentlySelectedCard;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -22,12 +26,58 @@ public class GameManager : Singleton<GameManager>
 
         UI.ShowCanvas(UI.HomeCanvas);
         UI.BuildGameTypeButtons(gameTypes, StartGame);
+
+        Physics.queriesHitBackfaces = true;
     }
 
     // Update is called once per frame
     void Update()
     {
-        
+        HandleInput();
+    }
+
+    private void HandleInput()
+    {
+        if (Mouse.current.leftButton.wasPressedThisFrame)
+        {
+            Ray ray = Camera.main.ScreenPointToRay(Mouse.current.position.ReadValue());
+            RaycastHit hit;
+
+            if (Physics.Raycast(ray, out hit))
+            {
+                if (hit.collider.gameObject.CompareTag("cardBack"))
+                {
+                    HandleCardClicked(hit.collider.gameObject.GetComponentInParent<CardController>());
+                }
+            }
+        }
+    }
+
+    private void HandleCardClicked(CardController card)
+    {
+        if (card == currentlySelectedCard)
+        {
+            return;
+        }
+
+        card.SetFrontFace(true);
+
+        if (currentlySelectedCard == null)
+        {
+            currentlySelectedCard = card;
+        }
+        else
+        {
+            if (card.Id != currentlySelectedCard.Id)
+            {
+                StartCoroutine(FlipCardsBack(1, new CardController[] { card, currentlySelectedCard }));
+            }
+            else
+            {
+                
+            }
+            currentlySelectedCard = null;
+        }
     }
 
     public void ShowGameTypes()
@@ -39,7 +89,7 @@ public class GameManager : Singleton<GameManager>
     {
         var grid = CardContainer.GetComponent<GridLayoutGroup>();
         grid.constraintCount = gameType.rows;
-        
+
         var spacingCoef = 0.2f;
         var rectTransform = CardContainer.GetComponent<RectTransform>();
         var fittingCoef = Mathf.Min(rectTransform.sizeDelta.x / gameType.rows, rectTransform.sizeDelta.y / gameType.cols);
@@ -49,14 +99,28 @@ public class GameManager : Singleton<GameManager>
 
         ClearCardContainer();
 
-        SpawnCards(gameType.rows * gameType.cols);
+        deck = SpawnCards(gameType.rows * gameType.cols);
 
         UI.ShowCanvas(UI.GameCanvas);
+
+        StartCoroutine(FlipCardsBack());
     }
 
     public void EndGame()
     {
         UI.ShowCanvas(UI.HomeCanvas);
+    }
+
+    private IEnumerator FlipCardsBack(int secsDelay = 2, CardController[] cards = null)
+    {
+        yield return new WaitForSeconds(secsDelay);
+
+        cards ??= deck.ToArray();
+
+        foreach (var card in cards)
+        {
+            card.SetFrontFace(false);
+        }
     }
 
     private void ClearCardContainer()
@@ -67,35 +131,34 @@ public class GameManager : Singleton<GameManager>
         }
     }
 
-    private void SpawnCards(int count)
+    private List<CardController> SpawnCards(int count)
     {
-        var ids = GenerateIds(count);
+        List<CardController> cards = new();
+        var ids = GenerateRandomIds(count);
 
         for (int i = 0; i < count; i++)
         {
             var card = Instantiate(CardPrefab, CardContainer);
 
-            card.Id = ids[i];
+            card.SetId(ids[i]);
+
+            cards.Add(card);
         }
+
+        return cards;
     }
 
-    private List<int> GenerateIds(int count)
+    private List<int> GenerateRandomIds(int count)
     {
         List<int> output = new();
-        var lastId = -1;
-        var id = -1;
-        for (int i = 0; i < count / 2; i++)
+        int cardVariation = 0;
+        for (int i = 0; i < count; i += 2)
         {
-            while (id == lastId)
-            {
-                id = Random.Range(0, CardTypesCount);
-            }
-            output.Add(id);
-            lastId = id;
+            output.Add(cardVariation % CardVariationsCount);
+            output.Add(cardVariation % CardVariationsCount);
+            cardVariation++;
         }
 
-        output.AddRange(output);
-        Debug.Log(JsonUtility.ToJson(output));
         return output.OrderBy(item => System.Guid.NewGuid()).ToList();
     }
 }
