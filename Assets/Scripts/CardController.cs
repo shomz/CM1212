@@ -18,6 +18,5 @@ public class CardController : MonoBehaviour
     public void SetFrontFace(bool on)
     {
         Animator.SetBool("Flipped", !on);
-        //frontFace.gameObject.SetActive(on);
     }
 }

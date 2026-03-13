@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,11 +9,14 @@ using UnityEngine.UI;
 public class GameManager : Singleton<GameManager>
 {
     [SerializeField] private UIController UI;
+    [SerializeField] private ScoreManager ScoreManager;
     [SerializeField] private Transform CardContainer;
     [SerializeField] private CardController CardPrefab;
     [SerializeField] private int CardVariationsCount = 4;
     private List<CardController> deck;
     private CardController currentlySelectedCard;
+    private bool AllowedToSelectCards;
+    private int solved;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -38,7 +42,7 @@ public class GameManager : Singleton<GameManager>
 
     private void HandleInput()
     {
-        if (Mouse.current.leftButton.wasPressedThisFrame)
+        if (AllowedToSelectCards && Mouse.current.leftButton.wasPressedThisFrame)
         {
             Ray ray = Camera.main.ScreenPointToRay(Mouse.current.position.ReadValue());
             RaycastHit hit;
@@ -74,10 +78,30 @@ public class GameManager : Singleton<GameManager>
             }
             else
             {
-                
+                AllowedToSelectCards = true;
+                solved += 2;
             }
+
+            var newScore = ScoreManager.AddScore(card.Id == currentlySelectedCard.Id);
+            UI.UpdateScore(newScore);
             currentlySelectedCard = null;
+
+            CheckGameOver();
         }
+    }
+
+    private void CheckGameOver()
+    {
+        if (deck.Count == solved)
+        {
+            StartCoroutine(ShowCongratulations());
+        }
+    }
+
+    private IEnumerator ShowCongratulations()
+    {
+        yield return new WaitForSeconds(2);
+        UI.ShowCanvas(UI.GameOverCanvas);
     }
 
     public void ShowGameTypes()
@@ -86,6 +110,20 @@ public class GameManager : Singleton<GameManager>
     }
 
     public void StartGame(GameType gameType)
+    {
+        GridSetup(gameType);
+
+        ClearCardContainer();
+
+        deck = SpawnCards(gameType.rows * gameType.cols);
+        solved = 0;
+
+        UI.ShowCanvas(UI.GameCanvas);
+
+        StartCoroutine(FlipCardsBack());
+    }
+
+    private void GridSetup(GameType gameType)
     {
         var grid = CardContainer.GetComponent<GridLayoutGroup>();
         grid.constraintCount = gameType.rows;
@@ -96,14 +134,6 @@ public class GameManager : Singleton<GameManager>
 
         grid.cellSize = Vector2.one * (fittingCoef * (1 - spacingCoef));
         grid.spacing = Vector2.one * (fittingCoef * spacingCoef);
-
-        ClearCardContainer();
-
-        deck = SpawnCards(gameType.rows * gameType.cols);
-
-        UI.ShowCanvas(UI.GameCanvas);
-
-        StartCoroutine(FlipCardsBack());
     }
 
     public void EndGame()
@@ -121,6 +151,8 @@ public class GameManager : Singleton<GameManager>
         {
             card.SetFrontFace(false);
         }
+
+        AllowedToSelectCards = true;
     }
 
     private void ClearCardContainer()
