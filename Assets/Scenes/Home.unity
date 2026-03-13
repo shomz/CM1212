@@ -1603,6 +1603,7 @@ MonoBehaviour:
   Score: {fileID: 1380394082}
   ScoreChange: {fileID: 899815496}
   ButtonPrefab: {fileID: 4912884816194953646, guid: f5c11b44c842d2946a57b8e2b1c234b6, type: 3}
+  ContinueButton: {fileID: 1890511545}
 --- !u!1 &1064911677
 GameObject:
   m_ObjectHideFlags: 0
@@ -2509,7 +2510,7 @@ GameObject:
   - component: {fileID: 1435267541}
   - component: {fileID: 1435267540}
   m_Layer: 5
-  m_Name: Button
+  m_Name: Start Button
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3085,7 +3086,7 @@ GameObject:
   - component: {fileID: 1890511546}
   - component: {fileID: 1890511545}
   m_Layer: 5
-  m_Name: Button (1)
+  m_Name: Continue Button
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3157,7 +3158,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1064911678}
         m_TargetAssemblyTypeName: GameManager, Assembly-CSharp
-        m_MethodName: ShowGameTypes
+        m_MethodName: LoadGame
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}

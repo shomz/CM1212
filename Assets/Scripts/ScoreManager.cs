@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 public class ScoreManager : MonoBehaviour
@@ -25,5 +26,16 @@ public class ScoreManager : MonoBehaviour
         Score += scoreChange;
 
         return (Score, scoreChange);
+    }
+
+    public (int score, int streak) GetScoreAndStreak()
+    {
+        return (Score, Streak);
+    }
+
+    public void SetScoreAndStreak(int score, int streak)
+    {
+        Score = score;
+        Streak = streak;
     }
 }

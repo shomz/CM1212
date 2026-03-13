@@ -14,10 +14,13 @@ public class GameManager : Singleton<GameManager>
     [SerializeField] private Transform CardContainer;
     [SerializeField] private CardController CardPrefab;
     [SerializeField] private int CardVariationsCount = 4;
-    private List<CardController> deck;
-    private CardController currentlySelectedCard;
+    private List<CardController> Deck;
+    private CardController CurrentlySelectedCard;
     private bool AllowedToSelectCards;
-    private int solved;
+    private int Solved;
+    private GameState SavedState;
+    private GameType CurrentGameType;
+
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -62,35 +65,35 @@ public class GameManager : Singleton<GameManager>
 
     private void HandleCardClicked(CardController card)
     {
-        if (card == currentlySelectedCard)
+        if (card == CurrentlySelectedCard)
         {
             return;
         }
 
         card.SetFrontFace(true);
 
-        if (currentlySelectedCard == null)
+        if (CurrentlySelectedCard == null)
         {
-            currentlySelectedCard = card;
+            CurrentlySelectedCard = card;
             Audio.PlayFlip();
         }
         else
         {
-            if (card.Id != currentlySelectedCard.Id)
+            if (card.Id != CurrentlySelectedCard.Id)
             {
                 Audio.PlayMismatch();
-                StartCoroutine(FlipCardsBack(1, new CardController[] { card, currentlySelectedCard }));
+                StartCoroutine(FlipCardsBack(1, new CardController[] { card, CurrentlySelectedCard }));
             }
             else
             {
                 Audio.PlayMatch();
                 AllowedToSelectCards = true;
-                solved += 2;
+                Solved += 2;
             }
 
-            var newScore = ScoreManager.AddScore(card.Id == currentlySelectedCard.Id);
+            var newScore = ScoreManager.AddScore(card.Id == CurrentlySelectedCard.Id);
             UI.UpdateScore(newScore);
-            currentlySelectedCard = null;
+            CurrentlySelectedCard = null;
 
             CheckGameOver();
         }
@@ -98,7 +101,7 @@ public class GameManager : Singleton<GameManager>
 
     private void CheckGameOver()
     {
-        if (deck.Count == solved)
+        if (Deck.Count == Solved)
         {
             StartCoroutine(ShowCongratulations());
         }
@@ -119,22 +122,62 @@ public class GameManager : Singleton<GameManager>
 
     public void StartGame(GameType gameType)
     {
+        SavedState = null;
+        CurrentGameType = gameType;
         GridSetup(gameType);
 
         ClearCardContainer();
 
-        deck = SpawnCards(gameType.rows * gameType.cols);
-        solved = 0;
-
-        float scale = CardContainer.GetComponent<GridLayoutGroup>().cellSize.x / 160;
-        foreach (var card in deck)
-        {
-            card.transform.localScale = Vector3.one * scale;
-        }
+        Deck = SpawnCards(gameType.rows * gameType.cols);
+        Solved = 0;
+        SetScale();
 
         UI.ShowCanvas(UI.GameCanvas);
 
         StartCoroutine(FlipCardsBack());
+    }
+
+    
+
+    public void LoadGame()
+    {
+        var gameType = SavedState.GameType;
+        GridSetup(gameType);
+
+        ClearCardContainer();
+
+        Deck = SpawnCards(gameType.rows * gameType.cols);
+        LoadState();
+        Solved = SavedState.Solved;
+
+        SetScale();
+
+        UI.ShowCanvas(UI.GameCanvas);
+
+        var cardsToFlipBack = new List<CardController>();
+        for (int i = 0; i < SavedState.CardStates.Length; i++)
+        {
+            if (SavedState.CardStates[i])
+            {
+                cardsToFlipBack.Add(Deck[i]);
+            }
+        }
+        StartCoroutine(FlipCardsBack(1, cardsToFlipBack.ToArray()));
+    }
+
+    public void EndGame()
+    {
+        if (Solved != Deck.Count)
+        {
+            SaveState();
+        }
+        else
+        {
+            SavedState = null;
+        }
+
+        UI.ShowCanvas(UI.HomeCanvas);
+        UI.EnableContinueButton(Solved != Deck.Count);
     }
 
     private void GridSetup(GameType gameType)
@@ -150,16 +193,36 @@ public class GameManager : Singleton<GameManager>
         grid.spacing = Vector2.one * (fittingCoef * spacingCoef);
     }
 
-    public void EndGame()
+    private void SaveState()
     {
-        UI.ShowCanvas(UI.HomeCanvas);
+        var score = ScoreManager.GetScoreAndStreak();
+        SavedState = new GameState()
+        {
+            CardIds = Deck.Select(c => c.Id).ToArray(),
+            CardStates = Deck.Select(c => c.GetComponent<Animator>().GetBool("Flipped")).ToArray(),
+            Score = score.score,
+            Streak = score.streak,
+            GameType = CurrentGameType,
+            Solved = Solved
+        };
+    }
+
+    private void LoadState()
+    {
+        for (int i = 0; i < Deck.Count; i++)
+        {
+            Deck[i].SetId(SavedState.CardIds[i]);
+            Deck[i].SetFrontFace(SavedState.CardStates[i]);
+        }
+
+        ScoreManager.SetScoreAndStreak(SavedState.Score, SavedState.Streak);
     }
 
     private IEnumerator FlipCardsBack(int secsDelay = 2, CardController[] cards = null)
     {
         yield return new WaitForSeconds(secsDelay);
 
-        cards ??= deck.ToArray();
+        cards ??= Deck.ToArray();
 
         foreach (var card in cards)
         {
@@ -209,4 +272,24 @@ public class GameManager : Singleton<GameManager>
 
         return output.OrderBy(item => System.Guid.NewGuid()).ToList();
     }
+
+    private void SetScale()
+    {
+        float scale = CardContainer.GetComponent<GridLayoutGroup>().cellSize.x / 160;
+        foreach (var card in Deck)
+        {
+            card.transform.localScale = Vector3.one * scale;
+        }
+    }
+}
+
+[Serializable]
+public class GameState
+{
+    public int[] CardIds;
+    public bool[] CardStates;
+    public int Score;
+    public int Streak;
+    public int Solved;
+    public GameType GameType;
 }

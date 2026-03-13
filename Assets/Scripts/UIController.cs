@@ -14,6 +14,7 @@ public class UIController : MonoBehaviour
     [SerializeField] private TMP_Text Score;
     [SerializeField] private TMP_Text ScoreChange;
     [SerializeField] private Button ButtonPrefab;
+    [SerializeField] private Button ContinueButton;
 
     private void Start()
     {
@@ -63,5 +64,8 @@ public class UIController : MonoBehaviour
         ScoreChange.gameObject.SetActive(false);
     }
 
-
+    public void EnableContinueButton(bool isOn)
+    {
+        ContinueButton.interactable = isOn;
+    }
 }
