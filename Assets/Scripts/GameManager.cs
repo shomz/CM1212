@@ -11,6 +11,7 @@ public class GameManager : Singleton<GameManager>
     [SerializeField] private UIController UI;
     [SerializeField] private ScoreManager ScoreManager;
     [SerializeField] private AudioManager Audio;
+    [SerializeField] private InputController InputController;
     [SerializeField] private Transform CardContainer;
     [SerializeField] private CardController CardPrefab;
     [SerializeField] private int CardVariationsCount = 4;
@@ -38,28 +39,14 @@ public class GameManager : Singleton<GameManager>
         UI.BuildGameTypeButtons(gameTypes, StartGame);
 
         Physics.queriesHitBackfaces = true;
+        InputController.OnHitHappened += HandleInput;
     }
 
-    // Update is called once per frame
-    void Update()
+    private void HandleInput(RaycastHit hit)
     {
-        HandleInput();
-    }
-
-    private void HandleInput()
-    {
-        if (AllowedToSelectCards && Mouse.current.leftButton.wasPressedThisFrame)
+        if (AllowedToSelectCards && hit.collider.gameObject.CompareTag("cardBack"))
         {
-            Ray ray = Camera.main.ScreenPointToRay(Mouse.current.position.ReadValue());
-            RaycastHit hit;
-
-            if (Physics.Raycast(ray, out hit))
-            {
-                if (hit.collider.gameObject.CompareTag("cardBack"))
-                {
-                    HandleCardClicked(hit.collider.gameObject.GetComponentInParent<CardController>());
-                }
-            }
+            HandleCardClicked(hit.collider.gameObject.GetComponentInParent<CardController>());
         }
     }
 
@@ -137,7 +124,7 @@ public class GameManager : Singleton<GameManager>
         StartCoroutine(FlipCardsBack());
     }
 
-    
+
 
     public void LoadGame()
     {

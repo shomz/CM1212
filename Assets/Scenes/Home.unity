@@ -1637,6 +1637,7 @@ MonoBehaviour:
   UI: {fileID: 933077417}
   ScoreManager: {fileID: 882937978}
   Audio: {fileID: 1313452236}
+  InputController: {fileID: 1599488605}
   CardContainer: {fileID: 527950249}
   CardPrefab: {fileID: -6503159344188142052, guid: ae82ad7507058ee49a3d6b99fe764654, type: 3}
   CardVariationsCount: 4
@@ -1656,6 +1657,7 @@ Transform:
   - {fileID: 933077416}
   - {fileID: 882937979}
   - {fileID: 1313452238}
+  - {fileID: 1599488604}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!224 &1096367704 stripped
@@ -2857,6 +2859,75 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
+--- !u!1 &1599488603
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1599488604}
+  - component: {fileID: 1599488605}
+  m_Layer: 0
+  m_Name: InputController
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1599488604
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1599488603}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1064911679}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1599488605
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1599488603}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9c127315243c22241812fe96936e1bab, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InputController
+  tapPressAction:
+    m_Name: Tap Press
+    m_Type: 1
+    m_ExpectedControlType: Button
+    m_Id: 0cedbfcb-4ae6-4201-8604-a0f00b792879
+    m_Processors: 
+    m_Interactions: 
+    m_SingletonActionBindings:
+    - m_Name: 
+      m_Id: 8389f4d8-98e7-4e26-a455-0e1ca1530e2d
+      m_Path: <Mouse>/leftButton
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Tap Press
+      m_Flags: 0
+    - m_Name: 
+      m_Id: 048e078d-dafd-45c4-979b-60e196fcdd8e
+      m_Path: <Touchscreen>/primaryTouch/tap
+      m_Interactions: 
+      m_Processors: 
+      m_Groups: 
+      m_Action: Tap Press
+      m_Flags: 0
+    m_Flags: 0
 --- !u!1 &1628321630
 GameObject:
   m_ObjectHideFlags: 0
